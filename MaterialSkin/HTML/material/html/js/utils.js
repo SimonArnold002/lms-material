@@ -703,7 +703,7 @@ function cacheKey(command, params, start, batchSize) {
            (command ? command.join("-") : "") + ":" + (params ? params.join("-") : "") + 
            (command && (command[0]=="artists" || command[0]=="albums") ? (lmsOptions.noGenreFilter ? ":1" : ":0") : "") +
            (command && command[0]=="albums" ? ((!IS_MOBILE || lmsOptions.touchLinks) ? ":1" : ":0") + (lmsOptions.noRoleFilter ? ":1" : ":0") + (lmsOptions.useGrouping ? ":1" : ":0") : "") +
-           (command && command[0]=="artists" ? (LMS_P_MAI && lmsOptions.showArtistImages ? ":1" : ":0") : "") +
+           (command && command[0]=="artists" ? (LMS_P_MAI && lmsOptions.showArtistImages ? ":1" : ":0") + (lmsOptions.noContributorPictures ? ":1" : ":0") : "") +
            ":"+start+":"+batchSize;
 }
 
