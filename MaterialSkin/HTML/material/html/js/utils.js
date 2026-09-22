@@ -340,6 +340,9 @@ function toggleBrowseImageSize(path, toGrid) {
         if (path.endsWith(from+".png")) {
             return path.replace(from+".png", to+".png");
         }
+        if (path.endsWith(from+".jpg")) {
+            return path.replace(from+".jpg", to+".jpg");
+        }
         if (path.endsWith(from)) {
             return path.replace(from, to);
         }
