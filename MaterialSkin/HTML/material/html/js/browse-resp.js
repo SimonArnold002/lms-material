@@ -889,7 +889,8 @@ function parseBrowseResp(data, parent, options, cacheKey) {
             }
             // Fold only when this response holds the whole list: a later batch would start at the wrong offset
             // and could carry a strip's tiles without its header. Past one batch the items stay as plain rows.
-            if (resp.haveStrips && data.result.count<=data.result.item_loop.length) {
+            // Uses LMS's own count: data.result.count is reduced for skipped items, and -1 means unknown.
+            if (resp.haveStrips && 0==startIndex && origCount>=0 && origCount<=data.result.item_loop.length) {
                 let items = [];
                 let rowOf = []; // original position -> row after folding (a tile maps to its strip's row)
                 let stripHeader = undefined;
