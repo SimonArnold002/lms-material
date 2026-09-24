@@ -891,27 +891,40 @@ function parseBrowseResp(data, parent, options, cacheKey) {
             // and could carry a strip's tiles without its header. Past one batch the items stay as plain rows.
             if (resp.haveStrips && data.result.count<=data.result.item_loop.length) {
                 let items = [];
+                let rowOf = []; // original position -> row after folding (a tile maps to its strip's row)
+                let stripHeader = undefined;
                 let strip = undefined;
                 for (let i=0, loop=resp.items, len=loop.length; i<len; ++i) {
                     let itm = loop[i];
                     if (itm.header) {
-                        items.push(itm);
+                        stripHeader = itm.stripHeader ? i : undefined;
                         strip = undefined;
-                        if (itm.stripHeader) {
-                            strip = {id:"strip."+i, strip:true, items:[]};
+                        items.push(itm);
+                    } else if (undefined!=stripHeader) {
+                        if (undefined==strip) { // added with its first tile, so an empty strip never becomes a row
+                            strip = {id:"strip."+stripHeader, strip:true, items:[]};
                             items.push(strip);
                         }
-                    } else if (undefined!=strip) {
                         strip.items.push(itm);
                     } else {
                         items.push(itm);
                     }
+                    rowOf.push(items.length-1);
                 }
-                let before = resp.items.length;
-                resp.items = items.filter(itm => !itm.strip || itm.items.length>0);
+                let folded = resp.items.length - items.length;
+                resp.items = items;
                 // listSize counts every item LMS sent, but a strip's tiles are now one row. Without this the
                 // list looks unfinished, so scrolling fetches (and appends) items it already has.
-                resp.listSize -= before - resp.items.length;
+                resp.listSize -= folded;
+                // The item count shown in the subtitle is taken from the rows, so add the folded tiles back.
+                resp.foldedItems = folded;
+                // Jumplist positions were recorded against the unfolded items.
+                for (let j=0, loop=resp.jumplist, len=loop.length; j<len; ++j) {
+                    let pos = loop[j].index - startIndex;
+                    if (pos>=0 && pos<rowOf.length) {
+                        loop[j].index = startIndex + rowOf[pos];
+                    }
+                }
                 resp.canUseGrid = false; // the page is a list; the strips are its tiles
             }
             if (1==resp.items.length && 'text'==resp.items[0].type && 'itemNoAction'==resp.items[0].style && msgIsEmpty(resp.items[0].title)) {
@@ -1105,7 +1118,8 @@ function parseBrowseResp(data, parent, options, cacheKey) {
                     }
                     // TODO: If using paging/infinite-scroll and pervious chunk had headers then itemCount wil be wrong!
                     //       Likewise if this was all tracks/albums/artists this will also be broken.
-                    let itemCount = startIndex + (resp.items.length-((categories.size>1 ? categories.size : 0) + resp.numHeaders));
+                    let itemCount = startIndex + (resp.items.length-((categories.size>1 ? categories.size : 0) + resp.numHeaders)) +
+                                    (undefined==resp.foldedItems ? 0 : resp.foldedItems);
                     if (0==itemCount) {
                         resp.subtitle=i18n("Empty");
                     } else if (isAppsTop) {
