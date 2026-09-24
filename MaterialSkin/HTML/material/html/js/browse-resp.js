@@ -905,7 +905,11 @@ function parseBrowseResp(data, parent, options, cacheKey) {
                         items.push(itm);
                     }
                 }
+                let before = resp.items.length;
                 resp.items = items.filter(itm => !itm.strip || itm.items.length>0);
+                // listSize counts every item LMS sent, but a strip's tiles are now one row. Without this the
+                // list looks unfinished, so scrolling fetches (and appends) items it already has.
+                resp.listSize -= before - resp.items.length;
                 resp.canUseGrid = false; // the page is a list; the strips are its tiles
             }
             if (1==resp.items.length && 'text'==resp.items[0].type && 'itemNoAction'==resp.items[0].style && msgIsEmpty(resp.items[0].title)) {
