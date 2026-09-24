@@ -280,6 +280,11 @@ function parseBrowseResp(data, parent, options, cacheKey) {
                         i.header = true;
                         resp.numHeaders++;
                         i.actions = undefined;
+                    } else if (i.type=="header-strip") {
+                        i.header = true;
+                        i.stripHeader = true;
+                        resp.numHeaders++;
+                        resp.haveStrips = true;
                     }
                 }
 
@@ -881,6 +886,27 @@ function parseBrowseResp(data, parent, options, cacheKey) {
                         }
                     }
                 }
+            }
+            if (resp.haveStrips) {
+                let items = [];
+                let strip = undefined;
+                for (let i=0, loop=resp.items, len=loop.length; i<len; ++i) {
+                    let itm = loop[i];
+                    if (itm.header) {
+                        items.push(itm);
+                        strip = undefined;
+                        if (itm.stripHeader) {
+                            strip = {id:"strip."+i, strip:true, items:[]};
+                            items.push(strip);
+                        }
+                    } else if (undefined!=strip) {
+                        strip.items.push(itm);
+                    } else {
+                        items.push(itm);
+                    }
+                }
+                resp.items = items.filter(itm => !itm.strip || itm.items.length>0);
+                resp.canUseGrid = false; // the page is a list; the strips are its tiles
             }
             if (1==resp.items.length && 'text'==resp.items[0].type && 'itemNoAction'==resp.items[0].style && msgIsEmpty(resp.items[0].title)) {
                 resp.items=[];
