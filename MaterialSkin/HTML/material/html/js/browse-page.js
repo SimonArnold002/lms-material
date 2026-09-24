@@ -675,7 +675,7 @@ var lmsBrowse = Vue.component("lms-browse", {
         },
         useRecyclerForLists() {
             return !this.isTop && this.items.length>LMS_MAX_NON_SCROLLER_ITEMS && undefined==this.items[0].searchcat &&
-                   !this.items.some(itm => itm.strip)
+                   !this.items[0].pageHasStrips
         },
         currentImage() {
             if (this.current) {

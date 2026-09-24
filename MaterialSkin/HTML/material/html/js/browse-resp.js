@@ -895,6 +895,7 @@ function parseBrowseResp(data, parent, options, cacheKey) {
                 let rowOf = []; // original position -> row after folding (a tile maps to its strip's row)
                 let stripHeader = undefined;
                 let strip = undefined;
+                let haveStrip = false;
                 for (let i=0, loop=resp.items, len=loop.length; i<len; ++i) {
                     let itm = loop[i];
                     if (itm.header) {
@@ -905,6 +906,7 @@ function parseBrowseResp(data, parent, options, cacheKey) {
                         if (undefined==strip) { // added with its first tile, so an empty strip never becomes a row
                             strip = {id:"strip."+stripHeader, strip:true, items:[]};
                             items.push(strip);
+                            haveStrip = true;
                         }
                         strip.items.push(itm);
                     } else {
@@ -914,6 +916,10 @@ function parseBrowseResp(data, parent, options, cacheKey) {
                 }
                 let folded = resp.items.length - items.length;
                 resp.items = items;
+                // Flag the page on its first row, so checks for strips need not scan every row.
+                if (haveStrip) {
+                    items[0].pageHasStrips = true;
+                }
                 // listSize counts every item LMS sent, but a strip's tiles are now one row. Without this the
                 // list looks unfinished, so scrolling fetches (and appends) items it already has.
                 resp.listSize -= folded;
@@ -1032,7 +1038,9 @@ function parseBrowseResp(data, parent, options, cacheKey) {
                         resp.items.unshift({
                                         title: text.startsWith("<") ? text : ("<div>"+text+"</div>"),
                                         type: "html",
-                                        id: parent.id+".textarea"
+                                        id: parent.id+".textarea",
+                                        // Keep the strips flag on the first row
+                                        pageHasStrips: resp.items.length>0 ? resp.items[0].pageHasStrips : undefined
                                        });
                         resp.canUseGrid = false;
                     }
