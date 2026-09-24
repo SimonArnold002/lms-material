@@ -887,7 +887,9 @@ function parseBrowseResp(data, parent, options, cacheKey) {
                     }
                 }
             }
-            if (resp.haveStrips) {
+            // Fold only when this response holds the whole list: a later batch would start at the wrong offset
+            // and could carry a strip's tiles without its header. Past one batch the items stay as plain rows.
+            if (resp.haveStrips && data.result.count<=data.result.item_loop.length) {
                 let items = [];
                 let strip = undefined;
                 for (let i=0, loop=resp.items, len=loop.length; i<len; ++i) {
