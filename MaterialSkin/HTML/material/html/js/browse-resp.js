@@ -896,6 +896,9 @@ function parseBrowseResp(data, parent, options, cacheKey) {
                 let stripHeader = undefined;
                 let strip = undefined;
                 let haveStrip = false;
+                // Show as many tiles in a strip as search does for the screen width; the header's More opens the rest.
+                let browseView = document.getElementById("browse-view");
+                let maxTiles = undefined==browseView ? 10 : numScrollItems({$store:store}, browseView);
                 for (let i=0, loop=resp.items, len=loop.length; i<len; ++i) {
                     let itm = loop[i];
                     if (itm.header) {
@@ -908,7 +911,9 @@ function parseBrowseResp(data, parent, options, cacheKey) {
                             items.push(strip);
                             haveStrip = true;
                         }
-                        strip.items.push(itm);
+                        if (strip.items.length<maxTiles) {
+                            strip.items.push(itm);
+                        }
                     } else {
                         items.push(itm);
                     }
